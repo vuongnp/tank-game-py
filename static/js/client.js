@@ -235,9 +235,46 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.fillRect(16, -28, 6, 28);
         }
         
-        // Draw health bar
-        ctx.fillStyle = tank.health > 50 ? 'green' : 'red';
-        ctx.fillRect(-20, -35, (tank.health / 100) * 40, 5);
+        // Draw health bar - CORRECTED POSITIONING
+        const healthBarWidth = 40;
+        const healthBarHeight = 5;
+        const healthBarX = -healthBarWidth / 2;  // FIXED: Use local coordinates (centered)
+        const healthBarY = -30;  // FIXED: Position relative to tank center
+        
+        // Draw background health bar (empty)
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+        
+        // FIXED: Properly calculate health percentage based on tank type
+        let maxHealth;
+        if (tank.maxHealth) {
+            // Use the tank's assigned maxHealth if available
+            maxHealth = tank.maxHealth;
+        } else if (tank.id === 1) {
+            // Player tank has 150 max health
+            maxHealth = 150;
+        } else {
+            // Enemy tanks have 100 max health
+            maxHealth = 100;
+        }
+        
+        // When a tank is created, it should start with health = maxHealth
+        // This ensures health bars appear full when tanks are at their maximum
+        const healthPercent = Math.max(0, Math.min(1, tank.health / maxHealth));
+        
+        // Choose color based on health percentage
+        let healthColor;
+        if (healthPercent > 0.6) {
+            healthColor = '#00cc00'; // Green for high health
+        } else if (healthPercent > 0.3) {
+            healthColor = '#ffcc00'; // Yellow for medium health
+        } else {
+            healthColor = '#cc0000'; // Red for low health
+        }
+        
+        // Draw filled health portion
+        ctx.fillStyle = healthColor;
+        ctx.fillRect(healthBarX, healthBarY, healthBarWidth * healthPercent, healthBarHeight);
         
         // If tank has a power-up, add a glowing effect
         if (tank.barrels > 1) {

@@ -147,16 +147,17 @@ def check_enemy_spawn(current_time):
             enemy_color = ENEMY_COLORS[color_index]
 
             # New enemy tank
+            enemy_health = 100  # Standard health for enemies
             enemy_tank = {
                 "id": new_id,
                 "x": spawn_x,
                 "y": spawn_y,
                 "angle": random.randint(0, 359),
-                "health": 80
-                + (game_state["currentLevel"] * 10),  # Health increases with level
+                "health": enemy_health,
+                "maxHealth": enemy_health,  # Ensure maxHealth matches initial health
                 "color": enemy_color,
                 "barrels": 1,
-                "ai_skill": level_conf["ai_skill"],  # Higher levels have smarter AI
+                "ai_skill": level_conf["ai_skill"],
             }
 
             game_state["tanks"].append(enemy_tank)
@@ -679,9 +680,9 @@ def check_reward_collision(tank):
                 ) * 5  # +5 health per level
                 health_gain = min(base_health + level_bonus, 50)  # Cap at +50 health
 
-                tank["health"] = min(
-                    tank.get("health", 0) + health_gain, 100
-                )  # Max 100 health
+                # Use maxHealth if defined, otherwise default to 100
+                max_health = tank.get("maxHealth", 100)
+                tank["health"] = min(tank.get("health", 0) + health_gain, max_health)
 
                 # Notification message
                 tank["powerupMessage"] = f"Health Restored: +{health_gain}"
@@ -792,6 +793,7 @@ def update_projectiles(elapsed=0.033):  # Default to ~30 FPS
     game_state["projectiles"] = new_projectiles
 
 
+# Update the check_level_completion function to respect maxHealth
 def check_level_completion():
     # Check if player has defeated enough enemies to advance to next level
     level_conf = LEVEL_CONFIG.get(game_state["currentLevel"], LEVEL_CONFIG[5])
@@ -822,9 +824,10 @@ def check_level_completion():
             # Add a health bonus for completing a level
             for tank in game_state["tanks"]:
                 if tank["id"] == 1:  # Player tank
+                    max_health = tank.get("maxHealth", 150)  # Use maxHealth if defined
                     tank["health"] = min(
-                        tank["health"] + 20, 100
-                    )  # Bonus health, max 100
+                        tank["health"] + 20, max_health
+                    )  # Bonus health
 
             # Remove all enemies and spawn new ones for next level
             game_state["tanks"] = [
@@ -860,9 +863,10 @@ def start_game():
                 "x": 100,
                 "y": 100,
                 "angle": 0,
-                "health": 100,
+                "health": 150,  # Changed from 100 to 150
                 "color": "green",
                 "barrels": 1,
+                "maxHealth": 150,  # Add maxHealth property to track max value
             }
         ],
         "projectiles": [],
